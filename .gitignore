@@ -1,3 +1,11 @@
 *.pdf
 __pycache__/
 amqp_url.txt
+# Ignoruj te foldery wszędzie
+**/[Bb]in/
+**/[Oo]bj/
+**/.vs/
+**/.vscode/
+
+# Ignoruj pliki użytkownika wszędzie
+**/*.user

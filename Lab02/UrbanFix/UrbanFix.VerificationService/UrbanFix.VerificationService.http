@@ -1,0 +1,6 @@
+@UrbanFix.VerificationService_HostAddress = http://localhost:5172
+
+GET {{UrbanFix.VerificationService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,6 @@
+@UrbanFix.NotificationService_HostAddress = http://localhost:5082
+
+GET {{UrbanFix.NotificationService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

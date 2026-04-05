@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="UrbanFix.AssignmentService/UrbanFix.AssignmentService.csproj" Id="31e2fe02-67c7-4c2b-995c-dbb2582a3421" />
+  <Project Path="UrbanFix.NotificationService/UrbanFix.NotificationService.csproj" Id="593c5acf-721a-432e-8c38-673072c6afe3" />
+  <Project Path="UrbanFix.ReportService/UrbanFix.ReportService.csproj" />
+  <Project Path="UrbanFix.TimelineService/UrbanFix.TimelineService.csproj" Id="43d6ee68-c006-499b-a10b-8db1f7c69fe5" />
+  <Project Path="UrbanFix.VerificationService/UrbanFix.VerificationService.csproj" Id="f85196c5-9474-4278-89cb-06f9331d0157" />
+</Solution>
