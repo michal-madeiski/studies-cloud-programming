@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
 using UrbanFix.ReportService.Models;
 
 namespace UrbanFix.ReportService.Repository

@@ -1,4 +1,4 @@
-﻿namespace UrbanFix.ReportService.Infrastracture
+namespace UrbanFix.Common.Infrastructure
 {
     public class ReportCreatedEvent
     {

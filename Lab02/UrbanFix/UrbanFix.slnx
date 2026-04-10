@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="UrbanFix.AssignmentService/UrbanFix.AssignmentService.csproj" Id="31e2fe02-67c7-4c2b-995c-dbb2582a3421" />
+  <Project Path="UrbanFix.Common/UrbanFix.Common.csproj" Id="59ba7381-7c79-4a85-b3a8-08df111089e3" />
   <Project Path="UrbanFix.NotificationService/UrbanFix.NotificationService.csproj" Id="593c5acf-721a-432e-8c38-673072c6afe3" />
   <Project Path="UrbanFix.ReportService/UrbanFix.ReportService.csproj" />
   <Project Path="UrbanFix.TimelineService/UrbanFix.TimelineService.csproj" Id="43d6ee68-c006-499b-a10b-8db1f7c69fe5" />

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using UrbanFix.ReportService.Models;
 using UrbanFix.ReportService.Services;
 
 namespace UrbanFix.ReportService.Controllers
@@ -15,8 +16,12 @@ namespace UrbanFix.ReportService.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateReport([FromForm] string email, [FromForm] string description, [FromForm] IFormFile file)
+        public async Task<IActionResult> CreateReport([FromForm] ReportRequest request)
         {
+            var email = request.Email;
+            var description = request.Description;
+            var file = request.File;
+
             if (file == null || file.Length == 0)
                 return BadRequest("File is necessary");
 

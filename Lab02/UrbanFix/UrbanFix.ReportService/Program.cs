@@ -1,12 +1,10 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using System;
 using UrbanFix.ReportService.Repository;
 using UrbanFix.ReportService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddDbContext<UrbanFixDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
@@ -21,18 +19,16 @@ builder.Services.AddMassTransit(x =>
 
         cfg.Host(new Uri(rabbitUrl!));
 
-        cfg.ConfigureEndpoints(context);
+        cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter("report", false));
     });
 });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

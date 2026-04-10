@@ -1,7 +1,7 @@
 ﻿using MassTransit;
-using UrbanFix.ReportService.Repository;
+using UrbanFix.Common.Infrastructure;
 using UrbanFix.ReportService.Models;
-using UrbanFix.ReportService.Infrastracture;
+using UrbanFix.ReportService.Repository;
 
 namespace UrbanFix.ReportService.Services
 {
@@ -20,10 +20,12 @@ namespace UrbanFix.ReportService.Services
 
         public async Task<Guid> CreateReportAsync(string email, string description, IFormFile file)
         {
-            _logger.LogInformation("Started creating report...");
+            _logger.LogInformation($"[{GetType().Name}] Started creating report...");
 
             string fileName = file.FileName;
             string fileExtension = Path.GetExtension(fileName);
+
+            _logger.LogInformation($"[{GetType().Name}] File uploaded: {fileName}, Extension: {fileExtension}");
 
             var report = new Report
             {
@@ -36,7 +38,7 @@ namespace UrbanFix.ReportService.Services
             await _repository.AddAsync(report);
 
             var reportId = report.Id;
-            _logger.LogInformation($"Added new report - {reportId}");
+            _logger.LogInformation($"[{GetType().Name}] Added new report - {reportId}");
 
             await _publish.Publish(new ReportCreatedEvent
             {
@@ -45,7 +47,7 @@ namespace UrbanFix.ReportService.Services
                 Description = report.Description,
                 CreatedAt = report.CreatedAt
             });
-            _logger.LogInformation($"Publish event for new report - {reportId}");
+            _logger.LogInformation($"[{GetType().Name}] Publish event for new report - {reportId}");
 
             return reportId;
         }

@@ -12,6 +12,6 @@
         New,
         InProgress,
         Completed,
-        Rejected 
+        Rejected
     }
 }
