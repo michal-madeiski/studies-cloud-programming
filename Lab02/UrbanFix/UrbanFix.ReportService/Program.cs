@@ -1,3 +1,5 @@
+using Amazon.Runtime;
+using Amazon.S3;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.ReportService.Repository;
@@ -9,6 +11,7 @@ builder.Services.AddDbContext<UrbanFixDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IS3FileStorageService, S3FileStorageService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddMassTransit(x =>
@@ -26,6 +29,19 @@ builder.Services.AddMassTransit(x =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+var awsOptions = builder.Configuration.GetAWSOptions("AWS");
+
+awsOptions.Credentials = new SessionAWSCredentials(
+    builder.Configuration["AWS:AccessKey"],
+    builder.Configuration["AWS:SecretKey"],
+    builder.Configuration["AWS:SessionToken"]
+);
+
+builder.Services.AddDefaultAWSOptions(awsOptions);
+builder.Services.AddAWSService<IAmazonS3>();
+
 
 var app = builder.Build();
 

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using UrbanFix.NotificationService.Models;
 
 namespace UrbanFix.NotificationService.Repository
