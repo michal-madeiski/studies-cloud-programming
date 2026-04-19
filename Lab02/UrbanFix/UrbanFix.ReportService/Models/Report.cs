@@ -7,7 +7,9 @@
         public string? FileName { get; set; }
         public string? FileExtension { get; set; }
         public string Description { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
 
         // S3 Metadata
         public string? S3BucketName { get; set; }
@@ -16,3 +18,4 @@
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
     }
 }
+

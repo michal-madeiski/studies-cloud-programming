@@ -1,5 +1,6 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using UrbanFix.TimelineService.Services;
+using UrbanFix.TimelineService.Functions.Queries.GetTimeline;
 
 namespace UrbanFix.TimelineService.Controllers
 {
@@ -7,17 +8,18 @@ namespace UrbanFix.TimelineService.Controllers
     [Route("api/[controller]")]
     public class TimelinesController : ControllerBase
     {
-        private readonly ITimelineService _timelineService;
+        private readonly IMediator _mediator;
 
-        public TimelinesController(ITimelineService timelineService)
+        public TimelinesController(IMediator mediator)
         {
-            _timelineService = timelineService;
+            _mediator = mediator;
         }
 
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetTimeline(Guid reportId)
         {
-            var timeline = await _timelineService.GetTimelineByReportIdAsync(reportId);
+            var query = new GetTimelineQuery(reportId);
+            var timeline = await _mediator.Send(query);
             if (!timeline.Any())
                 return NotFound("Timeline not found");
 

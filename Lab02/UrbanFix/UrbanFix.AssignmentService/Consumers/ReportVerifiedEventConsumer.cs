@@ -1,5 +1,6 @@
 using MassTransit;
-using UrbanFix.AssignmentService.Services;
+using MediatR;
+using UrbanFix.AssignmentService.Functions.Commands.AssignTask;
 using UrbanFix.Common;
 using UrbanFix.Common.Infrastructure;
 
@@ -7,12 +8,12 @@ namespace UrbanFix.AssignmentService.Consumers
 {
     public class ReportVerifiedEventConsumer : IConsumer<ReportVerifiedEvent>
     {
-        private readonly IAssignmentService _assignmentService;
+        private readonly IMediator _mediator;
         private readonly ILogger<ReportVerifiedEventConsumer> _logger;
 
-        public ReportVerifiedEventConsumer(IAssignmentService assignmentService, ILogger<ReportVerifiedEventConsumer> logger)
+        public ReportVerifiedEventConsumer(IMediator mediator, ILogger<ReportVerifiedEventConsumer> logger)
         {
-            _assignmentService = assignmentService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -23,7 +24,7 @@ namespace UrbanFix.AssignmentService.Consumers
             if (context.Message.Decision == VerificationDecision.Accepted)
             {
                 _logger.LogInformation($"[{GetType().Name}] Report {context.Message.ReportId} was accepted, assigning task");
-                await _assignmentService.AssignTaskAsync(context.Message.ReportId, context.Message.SubmitterEmail);
+                await _mediator.Send(new AssignTaskCommand(context.Message.ReportId, context.Message.SubmitterEmail));
             }
             else
             {

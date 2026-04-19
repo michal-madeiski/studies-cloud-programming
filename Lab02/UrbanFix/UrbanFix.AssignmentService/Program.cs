@@ -2,7 +2,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.AssignmentService.Consumers;
 using UrbanFix.AssignmentService.Repository;
-using UrbanFix.AssignmentService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +9,9 @@ builder.Services.AddDbContext<AssignmentDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
-builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
 {

@@ -1,22 +1,24 @@
-﻿using MassTransit;
+using MassTransit;
+using MediatR;
 using UrbanFix.Common.Infrastructure;
 using UrbanFix.ReportService.Models;
 using UrbanFix.ReportService.Repository;
+using UrbanFix.ReportService.Services;
 
-namespace UrbanFix.ReportService.Services
+namespace UrbanFix.ReportService.Functions.Commands.CreateReport
 {
-    public class ReportService : IReportService
+    public class CreateReportCommandHandler : IRequestHandler<CreateReportCommand, Guid>
     {
         private readonly IReportRepository _repository;
         private readonly IS3FileStorageService _s3Storage;
         private readonly IPublishEndpoint _publish;
-        private readonly ILogger<ReportService> _logger;
+        private readonly ILogger<CreateReportCommandHandler> _logger;
 
-        public ReportService(
+        public CreateReportCommandHandler(
             IReportRepository repository,
             IS3FileStorageService s3Storage,
             IPublishEndpoint publish,
-            ILogger<ReportService> logger)
+            ILogger<CreateReportCommandHandler> logger)
         {
             _repository = repository;
             _s3Storage = s3Storage;
@@ -24,19 +26,19 @@ namespace UrbanFix.ReportService.Services
             _logger = logger;
         }
 
-        public async Task<Guid> CreateReportAsync(string email, string description, IFormFile file)
+        public async Task<Guid> Handle(CreateReportCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"[{GetType().Name}] Started creating report...");
 
-            string fileName = file.FileName;
+            string fileName = request.File.FileName;
             string fileExtension = Path.GetExtension(fileName);
-            string contentType = file.ContentType ?? "application/octet-stream";
+            string contentType = request.File.ContentType ?? "application/octet-stream";
 
-            _logger.LogInformation($"[{GetType().Name}] File received: {fileName}, Extension: {fileExtension}, Size: {file.Length} bytes");
+            _logger.LogInformation($"[{GetType().Name}] File received: {fileName}, Extension: {fileExtension}, Size: {request.File.Length} bytes");
 
             try
             {
-                using (var fileStream = file.OpenReadStream())
+                using (var fileStream = request.File.OpenReadStream())
                 {
                     var (bucketName, objectKey, fileSize) = await _s3Storage.UploadFileAsync(
                         fileStream,
@@ -47,10 +49,12 @@ namespace UrbanFix.ReportService.Services
 
                     var report = new Report
                     {
-                        SubmitterEmail = email,
+                        SubmitterEmail = request.Email,
                         FileName = fileName,
                         FileExtension = fileExtension,
-                        Description = description,
+                        Description = request.Description,
+                        Latitude = request.Latitude,
+                        Longitude = request.Longitude,
                         S3BucketName = bucketName,
                         S3ObjectKey = objectKey,
                         FileSize = fileSize,
@@ -67,7 +71,7 @@ namespace UrbanFix.ReportService.Services
                         ReportId = reportId,
                         SubmitterEmail = report.SubmitterEmail,
                         Description = report.Description,
-                        CreatedAt = report.CreatedAt
+                        CreatedAt = report.UploadedAt
                     });
                     _logger.LogInformation($"[{GetType().Name}] Publish event for new report - {reportId}");
 

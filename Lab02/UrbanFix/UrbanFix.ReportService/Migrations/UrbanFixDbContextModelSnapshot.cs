@@ -28,9 +28,6 @@ namespace UrbanFix.ReportService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -43,6 +40,12 @@ namespace UrbanFix.ReportService.Migrations
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("S3BucketName")
                         .HasColumnType("text");

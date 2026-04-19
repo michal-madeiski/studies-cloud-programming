@@ -1,5 +1,7 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using UrbanFix.AssignmentService.Services;
+using UrbanFix.AssignmentService.Functions.Commands.CompleteTask;
+using UrbanFix.AssignmentService.Functions.Queries.GetAssignment;
 
 namespace UrbanFix.AssignmentService.Controllers
 {
@@ -7,17 +9,18 @@ namespace UrbanFix.AssignmentService.Controllers
     [Route("api/[controller]")]
     public class AssignmentsController : ControllerBase
     {
-        private readonly IAssignmentService _assignmentService;
+        private readonly IMediator _mediator;
 
-        public AssignmentsController(IAssignmentService assignmentService)
+        public AssignmentsController(IMediator mediator)
         {
-            _assignmentService = assignmentService;
+            _mediator = mediator;
         }
 
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetAssignment(Guid reportId)
         {
-            var assignment = await _assignmentService.GetAssignmentByReportIdAsync(reportId);
+            var query = new GetAssignmentQuery(reportId);
+            var assignment = await _mediator.Send(query);
             if (assignment == null)
                 return NotFound("Assignment not found");
 
@@ -32,10 +35,11 @@ namespace UrbanFix.AssignmentService.Controllers
             });
         }
 
-        [HttpPost("{reportId}/complete")]
-        public async Task<IActionResult> CompleteTask(Guid reportId)
+        [HttpPost("{assignmentId}/complete")]
+        public async Task<IActionResult> CompleteTask(Guid assignmentId)
         {
-            var result = await _assignmentService.CompleteTaskAsync(reportId);
+            var command = new CompleteTaskCommand(assignmentId);
+            var result = await _mediator.Send(command);
             if (!result)
                 return NotFound("Assignment not found");
 
@@ -43,3 +47,4 @@ namespace UrbanFix.AssignmentService.Controllers
         }
     }
 }
+

@@ -12,7 +12,9 @@ builder.Services.AddDbContext<UrbanFixDbContext>(options =>
 
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IS3FileStorageService, S3FileStorageService>();
-builder.Services.AddScoped<IReportService, ReportService>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
 {

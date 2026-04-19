@@ -2,7 +2,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.VerificationService.Consumers;
 using UrbanFix.VerificationService.Repository;
-using UrbanFix.VerificationService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +9,9 @@ builder.Services.AddDbContext<VerificationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<IVerificationRepository, VerificationRepository>();
-builder.Services.AddScoped<IVerificationService, VerificationService>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
 {

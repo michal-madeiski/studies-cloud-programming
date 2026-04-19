@@ -2,7 +2,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.TimelineService.Consumers;
 using UrbanFix.TimelineService.Repository;
-using UrbanFix.TimelineService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +9,9 @@ builder.Services.AddDbContext<TimelineDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
-builder.Services.AddScoped<ITimelineService, TimelineService>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
 {

@@ -1,4 +1,5 @@
-﻿using UrbanFix.ReportService.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using UrbanFix.ReportService.Models;
 
 namespace UrbanFix.ReportService.Repository
 {
@@ -11,6 +12,16 @@ namespace UrbanFix.ReportService.Repository
         {
             await _context.Reports.AddAsync(report);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Report?> GetByIdAsync(Guid reportId)
+        {
+            return await _context.Reports.FirstOrDefaultAsync(r => r.Id == reportId);
+        }
+
+        public async Task<IEnumerable<Report>> GetAllAsync()
+        {
+            return await _context.Reports.ToListAsync();
         }
     }
 }

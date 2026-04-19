@@ -1,5 +1,6 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using UrbanFix.NotificationService.Services;
+using UrbanFix.NotificationService.Functions.Queries.GetNotifications;
 
 namespace UrbanFix.NotificationService.Controllers
 {
@@ -7,17 +8,18 @@ namespace UrbanFix.NotificationService.Controllers
     [Route("api/[controller]")]
     public class NotificationsController : ControllerBase
     {
-        private readonly INotificationService _notificationService;
+        private readonly IMediator _mediator;
 
-        public NotificationsController(INotificationService notificationService)
+        public NotificationsController(IMediator mediator)
         {
-            _notificationService = notificationService;
+            _mediator = mediator;
         }
 
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetNotifications(Guid reportId)
         {
-            var notifications = await _notificationService.GetNotificationsByReportIdAsync(reportId);
+            var query = new GetNotificationsQuery(reportId);
+            var notifications = await _mediator.Send(query);
             if (!notifications.Any())
                 return NotFound("Notifications not found");
 

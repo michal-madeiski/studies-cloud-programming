@@ -2,7 +2,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.NotificationService.Consumers;
 using UrbanFix.NotificationService.Repository;
-using UrbanFix.NotificationService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +9,9 @@ builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
 {

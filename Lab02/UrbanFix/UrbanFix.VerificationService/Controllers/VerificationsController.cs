@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using UrbanFix.VerificationService.Functions.Commands.VerifyReport;
+using UrbanFix.VerificationService.Functions.Queries.GetVerification;
 using UrbanFix.VerificationService.Models;
-using UrbanFix.VerificationService.Services;
 
 namespace UrbanFix.VerificationService.Controllers
 {
@@ -8,17 +10,18 @@ namespace UrbanFix.VerificationService.Controllers
     [Route("api/[controller]")]
     public class VerificationsController : ControllerBase
     {
-        private readonly IVerificationService _verificationService;
+        private readonly IMediator _mediator;
 
-        public VerificationsController(IVerificationService verificationService)
+        public VerificationsController(IMediator mediator)
         {
-            _verificationService = verificationService;
+            _mediator = mediator;
         }
 
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetVerification(Guid reportId)
         {
-            var verificationId = await _verificationService.GetVerificationByReportIdAsync(reportId);
+            var query = new GetVerificationQuery(reportId);
+            var verificationId = await _mediator.Send(query);
             if (verificationId == null)
                 return NotFound("Verification not found");
 
@@ -28,7 +31,8 @@ namespace UrbanFix.VerificationService.Controllers
         [HttpPost("{reportId}/verify")]
         public async Task<IActionResult> VerifyReport(Guid reportId, [FromBody] VerifyRequest request)
         {
-            var result = await _verificationService.VerifyReportAsync(reportId, request.Decision, request.Comment);
+            var command = new VerifyReportCommand(reportId, request.Decision, request.Comment);
+            var result = await _mediator.Send(command);
             if (!result)
                 return NotFound("Verification not found");
 
@@ -36,3 +40,4 @@ namespace UrbanFix.VerificationService.Controllers
         }
     }
 }
+
