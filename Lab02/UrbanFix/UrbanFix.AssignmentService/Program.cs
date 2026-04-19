@@ -10,7 +10,6 @@ builder.Services.AddDbContext<AssignmentDbContext>(options =>
 
 builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 
-// Register MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>
@@ -40,5 +39,28 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AssignmentDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        if (dbContext.Database.CanConnect())
+        {
+            logger.LogInformation("--- AWS RDS CONNECTION SUCCESS ---");
+            logger.LogInformation($"Connected to database: {dbContext.Database.GetDbConnection().Database}");
+        }
+        else
+        {
+            logger.LogWarning("--- AWS RDS CONNECTION FAILED ---");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error while connecting to database.");
+    }
+}
 
 app.Run();
