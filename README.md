@@ -8,4 +8,4 @@ Each lab class dir contains an implementation of tasks about the given topic.
 * Lab03 - refactoring Lab02 to cqs pattern
 * Lab04 - moving Lab03 local containers to amazon rds
 
-_Lab[number] is a one-week homework assignment._
+_Lab[number] is a two-weeks homework assignment._
