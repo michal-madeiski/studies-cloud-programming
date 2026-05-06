@@ -5,6 +5,9 @@ using UrbanFix.AssignmentService.Functions.Queries.GetAssignment;
 
 namespace UrbanFix.AssignmentService.Controllers
 {
+    /// <summary>
+    /// Task assignment service
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AssignmentsController : ControllerBase
@@ -16,34 +19,40 @@ namespace UrbanFix.AssignmentService.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Get assignment details
+        /// </summary>
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetAssignment(Guid reportId)
         {
             var query = new GetAssignmentQuery(reportId);
             var assignment = await _mediator.Send(query);
             if (assignment == null)
-                return NotFound("Assignment not found");
+                return NotFound(new { message = "Assignment not found" });
 
             return Ok(new
             {
-                AssignmentId = assignment.Id,
-                ReportId = assignment.ReportId,
-                AssignedTeamId = assignment.AssignedTeamId,
-                TeamName = assignment.AssignedTeam?.Name,
-                TeamAvailable = assignment.AssignedTeam?.IsAvailable,
-                Status = assignment.Status
+                assignmentId = assignment.Id,
+                reportId = assignment.ReportId,
+                assignedTeamId = assignment.AssignedTeamId,
+                teamName = assignment.AssignedTeam?.Name,
+                teamAvailable = assignment.AssignedTeam?.IsAvailable,
+                status = assignment.Status
             });
         }
 
+        /// <summary>
+        /// Complete assignment
+        /// </summary>
         [HttpPost("{assignmentId}/complete")]
-        public async Task<IActionResult> CompleteTask(Guid assignmentId)
+        public async Task<IActionResult> CompleteAssignment(Guid assignmentId)
         {
             var command = new CompleteTaskCommand(assignmentId);
             var result = await _mediator.Send(command);
             if (!result)
-                return NotFound("Assignment not found");
+                return NotFound(new { message = "Assignment not found" });
 
-            return Ok(new { Message = "Task completed successfully" });
+            return NoContent();
         }
     }
 }

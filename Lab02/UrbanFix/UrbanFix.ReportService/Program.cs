@@ -29,7 +29,23 @@ builder.Services.AddMassTransit(x =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{typeof(Program).Assembly.GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowApiGateway", policy =>
+    {
+        policy.WithOrigins("https://localhost:7200", "http://localhost:5200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .WithExposedHeaders("Content-Type", "Authorization");
+    });
+});
 
 
 var awsOptions = builder.Configuration.GetAWSOptions("AWS");
@@ -46,16 +62,15 @@ builder.Services.AddAWSService<IAmazonS3>();
 
 var app = builder.Build();
 
+
+app.UseCors("AllowApiGateway");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

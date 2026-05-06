@@ -6,6 +6,9 @@ using UrbanFix.VerificationService.Models;
 
 namespace UrbanFix.VerificationService.Controllers
 {
+    /// <summary>
+    /// Report verification service
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class VerificationsController : ControllerBase
@@ -17,26 +20,32 @@ namespace UrbanFix.VerificationService.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Get verification status
+        /// </summary>
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetVerification(Guid reportId)
         {
             var query = new GetVerificationQuery(reportId);
             var verificationId = await _mediator.Send(query);
             if (verificationId == null)
-                return NotFound("Verification not found");
+                return NotFound(new { message = "Verification not found" });
 
-            return Ok(new { VerificationId = verificationId });
+            return Ok(new { verificationId });
         }
 
-        [HttpPost("{reportId}/verify")]
-        public async Task<IActionResult> VerifyReport(Guid reportId, [FromBody] VerifyRequest request)
+        /// <summary>
+        /// Verify report
+        /// </summary>
+        [HttpPatch("{reportId}")]
+        public async Task<IActionResult> UpdateVerification(Guid reportId, [FromBody] VerifyRequest request)
         {
             var command = new VerifyReportCommand(reportId, request.Decision, request.Comment);
             var result = await _mediator.Send(command);
             if (!result)
-                return NotFound("Verification not found");
+                return NotFound(new { message = "Verification not found" });
 
-            return Ok(new { Message = "Report verified successfully" });
+            return NoContent();
         }
     }
 }

@@ -1,12 +1,16 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using UrbanFix.ReportService.Functions.Commands.CreateReport;
+using UrbanFix.ReportService.Functions.Queries.DownloadReportFile;
 using UrbanFix.ReportService.Functions.Queries.GetAllReports;
 using UrbanFix.ReportService.Functions.Queries.GetReport;
 using UrbanFix.ReportService.Models;
 
 namespace UrbanFix.ReportService.Controllers
 {
+    /// <summary>
+    /// Reports management service
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class ReportsController : ControllerBase
@@ -18,6 +22,9 @@ namespace UrbanFix.ReportService.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Create new report
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateReport([FromForm] ReportRequest request)
         {
@@ -28,20 +35,23 @@ namespace UrbanFix.ReportService.Controllers
             var longitude = request.Longitude;
 
             if (file == null || file.Length == 0)
-                return BadRequest("File is necessary");
+                return BadRequest(new { message = "File is required" });
 
             if (email == null || email == string.Empty)
-                return BadRequest("Email is necessary");
+                return BadRequest(new { message = "Email is required" });
 
             if (latitude == 0 || longitude == 0)
-                return BadRequest("Geographic coordinates are necessary");
+                return BadRequest(new { message = "Geographic coordinates are required" });
 
             var command = new CreateReportCommand(email, description, file, latitude, longitude);
             var reportId = await _mediator.Send(command);
 
-            return Created("", new { ReportId = reportId, Message = "Report created" });
+            return CreatedAtAction(nameof(GetReport), new { reportId }, new { reportId });
         }
 
+        /// <summary>
+        /// Get report details
+        /// </summary>
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetReport(Guid reportId)
         {
@@ -49,7 +59,7 @@ namespace UrbanFix.ReportService.Controllers
             var report = await _mediator.Send(query);
 
             if (report == null)
-                return NotFound("Report not found");
+                return NotFound(new { message = "Report not found" });
 
             return Ok(new
             {
@@ -66,6 +76,24 @@ namespace UrbanFix.ReportService.Controllers
             });
         }
 
+        /// <summary>
+        /// Download report photo
+        /// </summary>
+        [HttpGet("{reportId}/photo")]
+        public async Task<IActionResult> DownloadReportPhoto(Guid reportId)
+        {
+            var downloadQuery = new DownloadReportFileQuery(reportId);
+            var result = await _mediator.Send(downloadQuery);
+
+            if (result == null)
+                return NotFound(new { message = "Report not found" });
+
+            return File(result.FileStream, "application/octet-stream", result.Report.FileName);
+        }
+
+        /// <summary>
+        /// Get all reports
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllReports()
         {
