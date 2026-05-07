@@ -28,7 +28,7 @@ namespace UrbanFix.NotificationService.Controllers
             var notifications = await _mediator.Send(query);
 
             if (!notifications.Any())
-                return Ok(new List<object>()); // Zwraca pustą listę zamiast 404
+                return Ok(new List<object>());
 
             return Ok(notifications.Select(n => new
             {

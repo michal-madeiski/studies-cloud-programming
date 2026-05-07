@@ -47,6 +47,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+
 var app = builder.Build();
 
 app.UseCors("AllowApiGateway");

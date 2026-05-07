@@ -11,3 +11,10 @@ services:
     volumes:
       - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     restart: unless-stopped
+  urbanfix-mailhog:
+    image: mailhog/mailhog
+    container_name: urbanfix_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped

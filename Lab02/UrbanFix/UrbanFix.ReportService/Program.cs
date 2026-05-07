@@ -47,6 +47,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 var awsOptions = builder.Configuration.GetAWSOptions("AWS");
 

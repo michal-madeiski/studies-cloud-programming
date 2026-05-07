@@ -6,6 +6,32 @@ using UrbanFix.NotificationService.Functions.Commands.SendNotification;
 
 namespace UrbanFix.NotificationService.Consumers
 {
+    public class ReportCreatedEventConsumer : IConsumer<ReportCreatedEvent>
+    {
+        private readonly IMediator _mediator;
+        private readonly ILogger<ReportCreatedEventConsumer> _logger;
+
+        public ReportCreatedEventConsumer(IMediator mediator, ILogger<ReportCreatedEventConsumer> logger)
+        {
+            _mediator = mediator;
+            _logger = logger;
+        }
+
+        public async Task Consume(ConsumeContext<ReportCreatedEvent> context)
+        {
+            _logger.LogInformation($"[{GetType().Name}] Received ReportCreatedEvent for report {context.Message.ReportId}");
+
+            await _mediator.Send(new SendNotificationCommand(
+                context.Message.ReportId,
+                context.Message.SubmitterEmail,
+                TaskAssignmentStatus.New,
+                "Zgłoszenie przyjęte"
+            ));
+
+            _logger.LogInformation($"[{GetType().Name}] Sent confirmation email for created report {context.Message.ReportId}");
+        }
+    }
+
     public class TaskAssignedEventConsumer : IConsumer<TaskAssignedEvent>
     {
         private readonly IMediator _mediator;
@@ -25,7 +51,7 @@ namespace UrbanFix.NotificationService.Consumers
                 context.Message.ReportId,
                 context.Message.SubmitterEmail,
                 TaskAssignmentStatus.InProgress,
-                "Your report has been assigned to technical team for further processing"
+                "Przydzielone do zespołu"
             ));
 
             _logger.LogInformation($"[{GetType().Name}] Sent notification for assigned task for report {context.Message.ReportId}");
@@ -52,8 +78,8 @@ namespace UrbanFix.NotificationService.Consumers
                 : TaskAssignmentStatus.Rejected;
 
             var message = context.Message.Decision == VerificationDecision.Accepted
-                ? "Your report has been verified and accepted for processing"
-                : "Your report has been reviewed and rejected";
+                ? "Zweryfikowano pozytywnie"
+                : "Odrzucono po weryfikacji";
 
             await _mediator.Send(new SendNotificationCommand(
                 context.Message.ReportId,
@@ -85,7 +111,7 @@ namespace UrbanFix.NotificationService.Consumers
                 context.Message.ReportId,
                 context.Message.SubmitterEmail,
                 TaskAssignmentStatus.Completed,
-                "Technical team has completed the work on your report"
+                "Zadanie ukończone"
             ));
 
             _logger.LogInformation($"[{GetType().Name}] Sent notification for completed task for report {context.Message.ReportId}");
