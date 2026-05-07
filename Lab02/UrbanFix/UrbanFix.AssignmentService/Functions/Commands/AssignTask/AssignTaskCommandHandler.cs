@@ -40,7 +40,7 @@ namespace UrbanFix.AssignmentService.Functions.Commands.AssignTask
             {
                 ReportId = request.ReportId,
                 AssignedTeamId = randomTeam.Id,
-                Status = TaskAssignmentStatus.New,
+                Status = TaskAssignmentStatus.InProgress,
                 SubmitterEmail = request.SubmitterEmail
             };
 
