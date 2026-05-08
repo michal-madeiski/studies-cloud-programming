@@ -18,7 +18,8 @@ namespace UrbanFix.NotificationService.Functions.Queries.GetNotifications
         public async Task<IEnumerable<Notification>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"[{GetType().Name}] Retrieving notifications for report {request.ReportId}");
-            return await _repository.GetByReportIdAsync(request.ReportId);
+            var result = await _repository.GetByReportIdAsync(request.ReportId, pageNumber: 1, pageSize: 100);
+            return result.Items;
         }
     }
 }

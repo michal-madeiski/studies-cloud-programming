@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using UrbanFix.Common.Pagination;
 using UrbanFix.TimelineService.Models;
 
 namespace UrbanFix.TimelineService.Repository
@@ -13,9 +15,23 @@ namespace UrbanFix.TimelineService.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Timeline>> GetByReportIdAsync(Guid reportId)
+        public async Task<PaginationResponse<Timeline>> GetByReportIdAsync(Guid reportId, int pageNumber = 1, int pageSize = 10)
         {
-            return await Task.FromResult(_context.Timelines.Where(t => t.ReportId == reportId).ToList());
+            var query = _context.Timelines.Where(t => t.ReportId == reportId);
+            var totalCount = await query.CountAsync();
+
+            var timelines = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResponse<Timeline>
+            {
+                Items = timelines,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
         }
     }
 }

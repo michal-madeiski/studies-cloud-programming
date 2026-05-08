@@ -10,6 +10,8 @@ builder.Services.AddDbContext<AssignmentDbContext>(options =>
 
 builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 builder.Services.AddMassTransit(x =>

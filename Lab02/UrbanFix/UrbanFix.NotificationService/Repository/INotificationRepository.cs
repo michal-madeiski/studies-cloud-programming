@@ -1,3 +1,4 @@
+using UrbanFix.Common.Pagination;
 using UrbanFix.NotificationService.Models;
 
 namespace UrbanFix.NotificationService.Repository
@@ -5,6 +6,6 @@ namespace UrbanFix.NotificationService.Repository
     public interface INotificationRepository
     {
         Task AddAsync(Notification notification);
-        Task<IEnumerable<Notification>> GetByReportIdAsync(Guid reportId);
+        Task<PaginationResponse<Notification>> GetByReportIdAsync(Guid reportId, int pageNumber = 1, int pageSize = 10);
     }
 }

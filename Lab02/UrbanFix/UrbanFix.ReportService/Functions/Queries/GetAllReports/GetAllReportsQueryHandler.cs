@@ -1,10 +1,11 @@
 using MediatR;
+using UrbanFix.Common.Pagination;
 using UrbanFix.ReportService.Models;
 using UrbanFix.ReportService.Repository;
 
 namespace UrbanFix.ReportService.Functions.Queries.GetAllReports
 {
-    public class GetAllReportsQueryHandler : IRequestHandler<GetAllReportsQuery, IEnumerable<Report>>
+    public class GetAllReportsQueryHandler : IRequestHandler<GetAllReportsQuery, PaginationResponse<Report>>
     {
         private readonly IReportRepository _repository;
         private readonly ILogger<GetAllReportsQueryHandler> _logger;
@@ -15,13 +16,13 @@ namespace UrbanFix.ReportService.Functions.Queries.GetAllReports
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Report>> Handle(GetAllReportsQuery request, CancellationToken cancellationToken)
+        public async Task<PaginationResponse<Report>> Handle(GetAllReportsQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"[{GetType().Name}] Retrieving all reports");
+            _logger.LogInformation($"[{GetType().Name}] Retrieving reports with pagination - PageNumber: {request.PageNumber}, PageSize: {request.PageSize}");
 
-            var reports = await _repository.GetAllAsync();
+            var reports = await _repository.GetAllAsync(request.PageNumber, request.PageSize);
 
-            _logger.LogInformation($"[{GetType().Name}] Retrieved {reports.Count()} reports");
+            _logger.LogInformation($"[{GetType().Name}] Retrieved {reports.Items.Count} reports from {reports.TotalCount} total");
 
             return reports;
         }

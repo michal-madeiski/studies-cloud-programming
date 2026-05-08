@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using UrbanFix.Common.Pagination;
 using UrbanFix.NotificationService.Models;
 
 namespace UrbanFix.NotificationService.Repository
@@ -13,9 +15,23 @@ namespace UrbanFix.NotificationService.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetByReportIdAsync(Guid reportId)
+        public async Task<PaginationResponse<Notification>> GetByReportIdAsync(Guid reportId, int pageNumber = 1, int pageSize = 10)
         {
-            return await Task.FromResult(_context.Notifications.Where(n => n.ReportId == reportId).ToList());
+            var query = _context.Notifications.Where(n => n.ReportId == reportId);
+            var totalCount = await query.CountAsync();
+
+            var notifications = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResponse<Notification>
+            {
+                Items = notifications,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
         }
     }
 }

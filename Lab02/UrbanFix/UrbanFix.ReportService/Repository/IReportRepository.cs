@@ -1,4 +1,5 @@
-﻿using UrbanFix.ReportService.Models;
+﻿using UrbanFix.Common.Pagination;
+using UrbanFix.ReportService.Models;
 
 namespace UrbanFix.ReportService.Repository
 {
@@ -6,6 +7,6 @@ namespace UrbanFix.ReportService.Repository
     {
         Task AddAsync(Report report);
         Task<Report?> GetByIdAsync(Guid reportId);
-        Task<IEnumerable<Report>> GetAllAsync();
+        Task<PaginationResponse<Report>> GetAllAsync(int pageNumber = 1, int pageSize = 10);
     }
 }

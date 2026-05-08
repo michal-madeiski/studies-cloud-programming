@@ -92,27 +92,36 @@ namespace UrbanFix.ReportService.Controllers
         }
 
         /// <summary>
-        /// Get all reports
+        /// Get all reports with pagination support
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllReports()
+        public async Task<IActionResult> GetAllReports([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetAllReportsQuery();
-            var reports = await _mediator.Send(query);
+            var query = new GetAllReportsQuery(pageNumber, pageSize);
+            var result = await _mediator.Send(query);
 
-            return Ok(reports.Select(r => new
+            return Ok(new
             {
-                r.Id,
-                r.SubmitterEmail,
-                r.FileName,
-                r.FileExtension,
-                r.Description,
-                r.Latitude,
-                r.Longitude,
-                r.FileSize,
-                r.UploadedAt,
-                r.S3ObjectKey
-            }));
+                items = result.Items.Select(r => new
+                {
+                    r.Id,
+                    r.SubmitterEmail,
+                    r.FileName,
+                    r.FileExtension,
+                    r.Description,
+                    r.Latitude,
+                    r.Longitude,
+                    r.FileSize,
+                    r.UploadedAt,
+                    r.S3ObjectKey
+                }).ToList(),
+                pageNumber = result.PageNumber,
+                pageSize = result.PageSize,
+                totalCount = result.TotalCount,
+                totalPages = result.TotalPages,
+                hasPreviousPage = result.HasPreviousPage,
+                hasNextPage = result.HasNextPage
+            });
         }
     }
 }

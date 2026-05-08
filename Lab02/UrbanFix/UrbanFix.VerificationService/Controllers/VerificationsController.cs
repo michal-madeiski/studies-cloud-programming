@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UrbanFix.VerificationService.Functions.Commands.VerifyReport;
 using UrbanFix.VerificationService.Functions.Queries.GetVerification;
 using UrbanFix.VerificationService.Models;
+using UrbanFix.VerificationService.Repository;
 
 namespace UrbanFix.VerificationService.Controllers
 {
@@ -14,10 +15,40 @@ namespace UrbanFix.VerificationService.Controllers
     public class VerificationsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IVerificationRepository _repository;
 
-        public VerificationsController(IMediator mediator)
+        public VerificationsController(IMediator mediator, IVerificationRepository repository)
         {
             _mediator = mediator;
+            _repository = repository;
+        }
+
+        /// <summary>
+        /// Get all verifications with pagination support
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllVerifications([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _repository.GetAllVerificationsAsync(pageNumber, pageSize);
+            return Ok(new
+            {
+                items = result.Items.Select(v => new
+                {
+                    verificationId = v.Id,
+                    reportId = v.ReportId,
+                    submitterEmail = v.SubmitterEmail,
+                    officeWorkerId = v.OfficeWorkerId,
+                    decision = v.Decision,
+                    comment = v.Comment,
+                    verifiedAt = v.VerifiedAt
+                }).ToList(),
+                pageNumber = result.PageNumber,
+                pageSize = result.PageSize,
+                totalCount = result.TotalCount,
+                totalPages = result.TotalPages,
+                hasPreviousPage = result.HasPreviousPage,
+                hasNextPage = result.HasNextPage
+            });
         }
 
         /// <summary>
@@ -49,4 +80,3 @@ namespace UrbanFix.VerificationService.Controllers
         }
     }
 }
-
