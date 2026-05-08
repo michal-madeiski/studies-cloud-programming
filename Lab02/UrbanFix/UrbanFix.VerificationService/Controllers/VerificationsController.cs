@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UrbanFix.VerificationService.Functions.Commands.VerifyReport;
 using UrbanFix.VerificationService.Functions.Queries.GetVerification;
@@ -26,6 +27,7 @@ namespace UrbanFix.VerificationService.Controllers
         /// <summary>
         /// Get all verifications with pagination support
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllVerifications([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -68,6 +70,7 @@ namespace UrbanFix.VerificationService.Controllers
         /// <summary>
         /// Verify report
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{reportId}")]
         public async Task<IActionResult> UpdateVerification(Guid reportId, [FromBody] VerifyRequest request)
         {

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UrbanFix.NotificationService.Functions.Queries.GetNotifications;
 
@@ -21,6 +22,7 @@ namespace UrbanFix.NotificationService.Controllers
         /// <summary>
         /// Get notifications
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetNotifications(Guid reportId)
         {

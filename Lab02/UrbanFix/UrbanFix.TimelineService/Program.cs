@@ -1,9 +1,46 @@
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using UrbanFix.TimelineService.Consumers;
 using UrbanFix.TimelineService.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cognitoConfig = builder.Configuration.GetSection("Cognito");
+var authority = cognitoConfig["Authority"]!;
+var audience = cognitoConfig["ClientId"]!;
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.Authority = authority;
+        options.Audience = audience;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = authority,
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            RoleClaimType = "cognito:groups"
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("cognito:groups", "Admin");
+    });
+});
 
 builder.Services.AddDbContext<TimelineDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
@@ -59,6 +96,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

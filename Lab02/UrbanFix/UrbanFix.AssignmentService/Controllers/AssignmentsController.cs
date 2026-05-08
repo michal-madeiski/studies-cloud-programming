@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using UrbanFix.AssignmentService.Functions.Commands.CompleteTask;
@@ -31,6 +32,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Get all assignments with pagination support
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllAssignments([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -58,6 +60,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Get assignment details
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetAssignment(Guid reportId)
         {
@@ -122,7 +125,6 @@ namespace UrbanFix.AssignmentService.Controllers
                 }
                 catch
                 {
-                    // If report service call fails, still return assignment info without report details
                     result.Add(new
                     {
                         assignmentId = assignment.Id,
@@ -137,6 +139,8 @@ namespace UrbanFix.AssignmentService.Controllers
 
             return Ok(result);
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("{assignmentId}/complete")]
         public async Task<IActionResult> CompleteAssignment(Guid assignmentId)
         {
@@ -151,6 +155,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Get all technical teams with pagination support
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet("teams/all")]
         public async Task<IActionResult> GetAllTeams([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -175,6 +180,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Get technical team by ID
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet("teams/{teamId}")]
         public async Task<IActionResult> GetTeam(Guid teamId)
         {
@@ -193,6 +199,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Create new technical team
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost("teams")]
         public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest request)
         {
@@ -218,6 +225,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Update technical team
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPatch("teams/{teamId}")]
         public async Task<IActionResult> UpdateTeam(Guid teamId, [FromBody] UpdateTeamRequest request)
         {
@@ -244,6 +252,7 @@ namespace UrbanFix.AssignmentService.Controllers
         /// <summary>
         /// Delete technical team
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("teams/{teamId}")]
         public async Task<IActionResult> DeleteTeam(Guid teamId)
         {
