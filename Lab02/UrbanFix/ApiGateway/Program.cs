@@ -63,15 +63,15 @@ app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("https://localhost:7201/swagger/v1/swagger.json", "Reports API");
-    options.SwaggerEndpoint("https://localhost:7202/swagger/v1/swagger.json", "Verifications API");
-    options.SwaggerEndpoint("https://localhost:7203/swagger/v1/swagger.json", "Assignments API");
-    options.SwaggerEndpoint("https://localhost:7204/swagger/v1/swagger.json", "Timelines API");
-    options.SwaggerEndpoint("https://localhost:7205/swagger/v1/swagger.json", "Notifications API");
+    options.SwaggerEndpoint("http://localhost:5201/swagger/v1/swagger.json", "Reports API");
+    options.SwaggerEndpoint("http://localhost:5202/swagger/v1/swagger.json", "Verifications API");
+    options.SwaggerEndpoint("http://localhost:5203/swagger/v1/swagger.json", "Assignments API");
+    options.SwaggerEndpoint("http://localhost:5204/swagger/v1/swagger.json", "Timelines API");
+    options.SwaggerEndpoint("http://localhost:5205/swagger/v1/swagger.json", "Notifications API");
     options.RoutePrefix = string.Empty;
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

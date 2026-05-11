@@ -1,0 +1,109 @@
+name: urbanfix-app
+services:
+  mailhog:
+    image: mailhog/mailhog
+    container_name: urbanfix_app_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+  api-gateway:
+    container_name: urbanfix_api_gateway
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5200:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - ReverseProxy__Clusters__reports-cluster__Destinations__destination1__Address=http://report-service:8080
+      - ReverseProxy__Clusters__verifications-cluster__Destinations__destination1__Address=http://verification-service:8080
+      - ReverseProxy__Clusters__assignments-cluster__Destinations__destination1__Address=http://assignment-service:8080
+      - ReverseProxy__Clusters__timelines-cluster__Destinations__destination1__Address=http://timeline-service:8080
+      - ReverseProxy__Clusters__notifications-cluster__Destinations__destination1__Address=http://notification-service:8080
+
+  report-service:
+    container_name: urbanfix_report_service
+    build:
+      context: . 
+      dockerfile: UrbanFix.ReportService/Dockerfile
+    ports:
+      - "5201:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_REPORT}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - AWS__Region=${AWS_REGION}
+      - AWS__AccessKey=${AWS_ACCESS_KEY}
+      - AWS__SecretKey=${AWS_SECRET_KEY}
+      - AWS__SessionToken=${AWS_SESSION_TOKEN}
+      - AWS__BucketName=${AWS_BUCKET_NAME}
+      - AWS__BucketFolder=${AWS_BUCKET_FOLDER}
+
+  verification-service:
+    container_name: urbanfix_verification_service
+    build:
+      context: . 
+      dockerfile: UrbanFix.VerificationService/Dockerfile
+    ports:
+      - "5202:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_VERIFICATION}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+
+  assignment-service:
+    container_name: urbanfix_assignment_service
+    build:
+      context: . 
+      dockerfile: UrbanFix.AssignmentService/Dockerfile
+    ports:
+      - "5203:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_ASSIGNMENT}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - Services__ReportService__Url=http://report-service:8080
+
+  timeline-service:
+    container_name: urbanfix_timeline_service
+    build:
+      context: . 
+      dockerfile: UrbanFix.TimelineService/Dockerfile
+    ports:
+      - "5204:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_TIMELINE}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+
+  notification-service:
+    container_name: urbanfix_notification_service
+    build:
+      context: . 
+      dockerfile: UrbanFix.NotificationService/Dockerfile
+    ports:
+      - "5205:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_NOTIFICATION}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}

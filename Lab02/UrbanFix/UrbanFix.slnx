@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Elementy rozwiązania/">
+    <File Path=".env" />
+    <File Path="docker-compose.yml" />
+  </Folder>
   <Project Path="ApiGateway/ApiGateway.csproj" Id="d6acb5b8-58bf-4da1-a0fa-b394d85515c7" />
   <Project Path="UrbanFix.AssignmentService/UrbanFix.AssignmentService.csproj" Id="31e2fe02-67c7-4c2b-995c-dbb2582a3421" />
   <Project Path="UrbanFix.Common/UrbanFix.Common.csproj" Id="59ba7381-7c79-4a85-b3a8-08df111089e3" />
