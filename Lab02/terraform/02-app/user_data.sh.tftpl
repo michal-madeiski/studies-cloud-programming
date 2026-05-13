@@ -1,0 +1,168 @@
+#!/bin/bash
+# Output goes to /dev/console → visible in AWS EC2 "Get system log"
+exec > /dev/console 2>&1
+
+echo "=== [UrbanFix] user-data starting ==="
+
+# ---------- Docker ----------
+echo "=== Installing Docker ==="
+dnf install -y docker
+systemctl enable --now docker
+
+echo "=== Installing Docker Compose plugin ==="
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL \
+  "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+
+# ---------- ECR login ----------
+echo "=== Logging in to ECR ==="
+aws ecr get-login-password --region ${aws_region} \
+  | docker login --username AWS --password-stdin ${ecr_registry}
+
+# ---------- App files ----------
+echo "=== Writing app config ==="
+mkdir -p /opt/urbanfix
+cd /opt/urbanfix
+
+cat > /opt/urbanfix/.env << 'ENVEOF'
+DB_CONN_REPORT=Host=${db_host};Port=5432;Database=db_report_tf;Username=${db_username};Password=${db_password}
+DB_CONN_VERIFICATION=Host=${db_host};Port=5432;Database=db_verification_tf;Username=${db_username};Password=${db_password}
+DB_CONN_ASSIGNMENT=Host=${db_host};Port=5432;Database=db_assignment_tf;Username=${db_username};Password=${db_password}
+DB_CONN_TIMELINE=Host=${db_host};Port=5432;Database=db_timeline_tf;Username=${db_username};Password=${db_password}
+DB_CONN_NOTIFICATION=Host=${db_host};Port=5432;Database=db_notification_tf;Username=${db_username};Password=${db_password}
+MQ_CONN=${mq_conn}
+AWS_REGION=${aws_region}
+AWS_ACCESS_KEY=${aws_access_key}
+AWS_SECRET_KEY=${aws_secret_key}
+AWS_SESSION_TOKEN=${aws_session_token}
+AWS_BUCKET_NAME=${s3_bucket_name}
+AWS_BUCKET_FOLDER=${s3_bucket_folder}
+COGNITO_CLIENT_ID=${cognito_client_id}
+COGNITO_AUTHORITY=${cognito_authority}
+ENVEOF
+
+cat > /opt/urbanfix/docker-compose.yml << 'COMPOSEEOF'
+name: urbanfix-app
+services:
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: urbanfix_app_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+  api-gateway:
+    image: ${ecr_api_gateway}:latest
+    container_name: urbanfix_api_gateway
+    ports:
+      - "5200:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+      - ReverseProxy__Clusters__reports-cluster__Destinations__destination1__Address=http://report-service:8080
+      - ReverseProxy__Clusters__verifications-cluster__Destinations__destination1__Address=http://verification-service:8080
+      - ReverseProxy__Clusters__assignments-cluster__Destinations__destination1__Address=http://assignment-service:8080
+      - ReverseProxy__Clusters__timelines-cluster__Destinations__destination1__Address=http://timeline-service:8080
+      - ReverseProxy__Clusters__notifications-cluster__Destinations__destination1__Address=http://notification-service:8080
+    depends_on:
+      - report-service
+      - verification-service
+      - assignment-service
+      - timeline-service
+      - notification-service
+    restart: unless-stopped
+
+  report-service:
+    image: ${ecr_report}:latest
+    container_name: urbanfix_report_service
+    ports:
+      - "5201:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=$${DB_CONN_REPORT}
+      - ConnectionStrings__MqConn=$${MQ_CONN}
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+      - AWS__Region=$${AWS_REGION}
+      - AWS__AccessKey=$${AWS_ACCESS_KEY}
+      - AWS__SecretKey=$${AWS_SECRET_KEY}
+      - AWS__SessionToken=$${AWS_SESSION_TOKEN}
+      - AWS__BucketName=$${AWS_BUCKET_NAME}
+      - AWS__BucketFolder=$${AWS_BUCKET_FOLDER}
+    restart: unless-stopped
+
+  verification-service:
+    image: ${ecr_verification}:latest
+    container_name: urbanfix_verification_service
+    ports:
+      - "5202:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=$${DB_CONN_VERIFICATION}
+      - ConnectionStrings__MqConn=$${MQ_CONN}
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+    restart: unless-stopped
+
+  assignment-service:
+    image: ${ecr_assignment}:latest
+    container_name: urbanfix_assignment_service
+    ports:
+      - "5203:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=$${DB_CONN_ASSIGNMENT}
+      - ConnectionStrings__MqConn=$${MQ_CONN}
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+      - Services__ReportService__Url=http://report-service:8080
+    restart: unless-stopped
+
+  timeline-service:
+    image: ${ecr_timeline}:latest
+    container_name: urbanfix_timeline_service
+    ports:
+      - "5204:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=$${DB_CONN_TIMELINE}
+      - ConnectionStrings__MqConn=$${MQ_CONN}
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+    restart: unless-stopped
+
+  notification-service:
+    image: ${ecr_notification}:latest
+    container_name: urbanfix_notification_service
+    ports:
+      - "5205:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=$${DB_CONN_NOTIFICATION}
+      - ConnectionStrings__MqConn=$${MQ_CONN}
+      - Cognito__Authority=$${COGNITO_AUTHORITY}
+      - Cognito__ClientId=$${COGNITO_CLIENT_ID}
+    restart: unless-stopped
+COMPOSEEOF
+
+# ---------- Start ----------
+echo "=== Pulling images from ECR ==="
+docker compose pull
+
+echo "=== Starting containers ==="
+docker compose up -d
+
+echo "=== [UrbanFix] user-data complete ==="
+docker compose ps
