@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UrbanFix.Common;
 using UrbanFix.VerificationService.Functions.Commands.VerifyReport;
 using UrbanFix.VerificationService.Functions.Queries.GetVerification;
 using UrbanFix.VerificationService.Models;
@@ -68,13 +69,28 @@ namespace UrbanFix.VerificationService.Controllers
         }
 
         /// <summary>
-        /// Verify report
+        /// Accept report verification
         /// </summary>
         [Authorize(Roles = "Admin")]
-        [HttpPatch("{reportId}")]
-        public async Task<IActionResult> UpdateVerification(Guid reportId, [FromBody] VerifyRequest request)
+        [HttpPatch("{reportId}/accepted")]
+        public async Task<IActionResult> AcceptVerification(Guid reportId, [FromBody] VerifyCommentRequest request)
         {
-            var command = new VerifyReportCommand(reportId, request.Decision, request.Comment);
+            var command = new VerifyReportCommand(reportId, VerificationDecision.Accepted, request.Comment);
+            var result = await _mediator.Send(command);
+            if (!result)
+                return NotFound(new { message = "Verification not found" });
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Reject report verification
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{reportId}/rejected")]
+        public async Task<IActionResult> RejectVerification(Guid reportId, [FromBody] VerifyCommentRequest request)
+        {
+            var command = new VerifyReportCommand(reportId, VerificationDecision.Rejected, request.Comment);
             var result = await _mediator.Send(command);
             if (!result)
                 return NotFound(new { message = "Verification not found" });

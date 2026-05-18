@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 using UrbanFix.AssignmentService.Functions.Commands.CompleteTask;
 using UrbanFix.AssignmentService.Functions.Queries.GetAssignment;
 using UrbanFix.AssignmentService.Models;
@@ -18,15 +17,11 @@ namespace UrbanFix.AssignmentService.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IAssignmentRepository _repository;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuration;
 
-        public AssignmentsController(IMediator mediator, IAssignmentRepository repository, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public AssignmentsController(IMediator mediator, IAssignmentRepository repository)
         {
             _mediator = mediator;
             _repository = repository;
-            _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
         }
 
         /// <summary>
@@ -80,66 +75,6 @@ namespace UrbanFix.AssignmentService.Controllers
             });
         }
 
-        /// <summary>
-        /// Get some completed assignments with report details (photo path and description)
-        /// </summary>
-        [HttpGet("completed")]
-        public async Task<IActionResult> GetSomeCompletedAssignments([FromQuery] int count = 10)
-        {
-            if (count < 1 || count > 100)
-                return BadRequest(new { message = "Count must be between 1 and 100" });
-
-            var completedAssignments = await _repository.GetSomeCompletedAssignmentsAsync(count);
-
-            var client = _httpClientFactory.CreateClient();
-            var reportServiceUrl = Environment.GetEnvironmentVariable("REPORT_SERVICE_URL")
-                ?? _configuration.GetValue<string>("Services:ReportService:Url")
-                ?? "http://localhost:5201";
-
-            var result = new List<object>();
-
-            foreach (var assignment in completedAssignments)
-            {
-                try
-                {
-                    var reportResponse = await client.GetAsync($"{reportServiceUrl}/api/reports/{assignment.ReportId}");
-
-                    if (reportResponse.IsSuccessStatusCode)
-                    {
-                        var jsonContent = await reportResponse.Content.ReadAsStringAsync();
-                        using (JsonDocument doc = JsonDocument.Parse(jsonContent))
-                        {
-                            var root = doc.RootElement;
-
-                            result.Add(new
-                            {
-                                assignmentId = assignment.Id,
-                                reportId = assignment.ReportId,
-                                teamName = assignment.AssignedTeam?.Name,
-                                photoPath = root.TryGetProperty("s3ObjectKey", out var s3Key) ? s3Key.GetString() : null,
-                                description = root.TryGetProperty("description", out var desc) ? desc.GetString() : null,
-                                fileName = root.TryGetProperty("fileName", out var fn) ? fn.GetString() : null
-                            });
-                        }
-                    }
-                }
-                catch
-                {
-                    result.Add(new
-                    {
-                        assignmentId = assignment.Id,
-                        reportId = assignment.ReportId,
-                        teamName = assignment.AssignedTeam?.Name,
-                        photoPath = (string?)null,
-                        description = (string?)null,
-                        fileName = (string?)null
-                    });
-                }
-            }
-
-            return Ok(result);
-        }
-
         [Authorize(Roles = "Admin")]
         [HttpPost("{assignmentId}/complete")]
         public async Task<IActionResult> CompleteAssignment(Guid assignmentId)
@@ -153,28 +88,51 @@ namespace UrbanFix.AssignmentService.Controllers
         }
 
         /// <summary>
-        /// Get all technical teams with pagination support
+        /// Get all technical teams sorted by name
         /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpGet("teams/all")]
-        public async Task<IActionResult> GetAllTeams([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllTeams()
         {
-            var result = await _repository.GetAllTeamsAsync(pageNumber, pageSize);
-            return Ok(new
+            var teams = await _repository.GetAllTeamsAsync();
+            return Ok(teams.Select(t => new
             {
-                items = result.Items.Select(t => new
-                {
-                    id = t.Id,
-                    name = t.Name,
-                    isAvailable = t.IsAvailable
-                }).ToList(),
-                pageNumber = result.PageNumber,
-                pageSize = result.PageSize,
-                totalCount = result.TotalCount,
-                totalPages = result.TotalPages,
-                hasPreviousPage = result.HasPreviousPage,
-                hasNextPage = result.HasNextPage
-            });
+                id = t.Id,
+                name = t.Name,
+                isAvailable = t.IsAvailable
+            }));
+        }
+
+        /// <summary>
+        /// Get available technical teams sorted by name
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("teams/available")]
+        public async Task<IActionResult> GetAvailableTeams()
+        {
+            var teams = await _repository.GetAvailableTeamsPaginatedAsync();
+            return Ok(teams.Select(t => new
+            {
+                id = t.Id,
+                name = t.Name,
+                isAvailable = t.IsAvailable
+            }));
+        }
+
+        /// <summary>
+        /// Get unavailable technical teams sorted by name
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("teams/unavailable")]
+        public async Task<IActionResult> GetUnavailableTeams()
+        {
+            var teams = await _repository.GetUnavailableTeamsAsync();
+            return Ok(teams.Select(t => new
+            {
+                id = t.Id,
+                name = t.Name,
+                isAvailable = t.IsAvailable
+            }));
         }
 
         /// <summary>

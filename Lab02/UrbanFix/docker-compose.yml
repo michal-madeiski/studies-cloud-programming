@@ -107,3 +107,13 @@ services:
       - ConnectionStrings__MqConn=${MQ_CONN}
       - Cognito__Authority=${COGNITO_AUTHORITY}
       - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - Email__Provider=${EMAIL__PROVIDER}
+      - Email__FromEmail=${EMAIL__FROMEMAIL}
+      - Email__Providers__o2__SmtpHost=${EMAIL__PROVIDERS__O2__SMTPHOST}
+      - Email__Providers__o2__SmtpPort=${EMAIL__PROVIDERS__O2__SMTPPORT}
+      - Email__Providers__o2__SmtpUser=${EMAIL__PROVIDERS__O2__SMTPUSER}
+      - Email__Providers__o2__SmtpPassword=${EMAIL__PROVIDERS__O2__SMTPPASSWORD}
+      - Email__Providers__o2__UseStartTls=${EMAIL__PROVIDERS__O2__USESTARTTLS}
+      - Email__Providers__mailhog__SmtpHost=${EMAIL__PROVIDERS__MAILHOG__SMTPHOST}
+      - Email__Providers__mailhog__SmtpPort=${EMAIL__PROVIDERS__MAILHOG__SMTPPORT}
+      - Email__Providers__mailhog__UseStartTls=${EMAIL__PROVIDERS__MAILHOG__USESTARTTLS}

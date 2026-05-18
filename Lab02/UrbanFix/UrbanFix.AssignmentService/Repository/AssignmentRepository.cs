@@ -53,25 +53,27 @@ namespace UrbanFix.AssignmentService.Repository
         }
 
         /// <summary>
-        /// Get all technical teams with pagination support
+        /// Get all technical teams sorted by name
         /// </summary>
-        public async Task<PaginationResponse<TechnicalTeam>> GetAllTeamsAsync(int pageNumber = 1, int pageSize = 10)
+        public async Task<IEnumerable<TechnicalTeam>> GetAllTeamsAsync()
         {
-            var query = _context.TechnicalTeams;
-            var totalCount = await query.CountAsync();
+            return await _context.TechnicalTeams.OrderBy(t => t.Name).ToListAsync();
+        }
 
-            var teams = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+        /// <summary>
+        /// Get available technical teams sorted by name
+        /// </summary>
+        public async Task<IEnumerable<TechnicalTeam>> GetAvailableTeamsPaginatedAsync()
+        {
+            return await _context.TechnicalTeams.Where(t => t.IsAvailable).OrderBy(t => t.Name).ToListAsync();
+        }
 
-            return new PaginationResponse<TechnicalTeam>
-            {
-                Items = teams,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalCount = totalCount
-            };
+        /// <summary>
+        /// Get unavailable technical teams sorted by name
+        /// </summary>
+        public async Task<IEnumerable<TechnicalTeam>> GetUnavailableTeamsAsync()
+        {
+            return await _context.TechnicalTeams.Where(t => !t.IsAvailable).OrderBy(t => t.Name).ToListAsync();
         }
 
         public async Task<TechnicalTeam?> GetTeamByIdAsync(Guid teamId)
@@ -82,15 +84,6 @@ namespace UrbanFix.AssignmentService.Repository
         public async Task<IEnumerable<TechnicalTeam>> GetAvailableTeamsAsync()
         {
             return await _context.TechnicalTeams.Where(t => t.IsAvailable).ToListAsync();
-        }
-
-        public async Task<IEnumerable<TaskAssignment>> GetSomeCompletedAssignmentsAsync(int count)
-        {
-            return await _context.TaskAssignments
-                .Where(a => a.Status == TaskAssignmentStatus.Completed)
-                .OrderByDescending(a => a.Id)
-                .Take(count)
-                .ToListAsync();
         }
 
         public async Task UpdateAsync(TaskAssignment assignment)

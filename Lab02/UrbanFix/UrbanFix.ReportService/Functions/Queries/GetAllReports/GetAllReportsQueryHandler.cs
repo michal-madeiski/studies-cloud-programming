@@ -18,9 +18,9 @@ namespace UrbanFix.ReportService.Functions.Queries.GetAllReports
 
         public async Task<PaginationResponse<Report>> Handle(GetAllReportsQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"[{GetType().Name}] Retrieving reports with pagination - PageNumber: {request.PageNumber}, PageSize: {request.PageSize}");
+            _logger.LogInformation($"[{GetType().Name}] Retrieving reports with pagination - PageNumber: {request.PageNumber}, PageSize: {request.PageSize}, SortDescending: {request.SortDescending}, From: {request.From}, To: {request.To}");
 
-            var reports = await _repository.GetAllAsync(request.PageNumber, request.PageSize);
+            var reports = await _repository.GetAllAsync(request.PageNumber, request.PageSize, request.SortDescending, request.From, request.To, request.Status);
 
             _logger.LogInformation($"[{GetType().Name}] Retrieved {reports.Items.Count} reports from {reports.TotalCount} total");
 

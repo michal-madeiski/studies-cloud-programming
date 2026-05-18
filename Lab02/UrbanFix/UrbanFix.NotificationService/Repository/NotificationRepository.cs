@@ -17,7 +17,7 @@ namespace UrbanFix.NotificationService.Repository
 
         public async Task<PaginationResponse<Notification>> GetByReportIdAsync(Guid reportId, int pageNumber = 1, int pageSize = 10)
         {
-            var query = _context.Notifications.Where(n => n.ReportId == reportId);
+            var query = _context.Notifications.Where(n => n.ReportId == reportId).OrderBy(n => n.SentAt);
             var totalCount = await query.CountAsync();
 
             var notifications = await query

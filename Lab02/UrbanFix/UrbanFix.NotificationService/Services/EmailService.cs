@@ -4,9 +4,9 @@ namespace UrbanFix.NotificationService.Services
     {
         private readonly IEmailProvider _provider;
 
-        public EmailService(IEmailProviderFactory factory)
+        public EmailService(IEmailProvider provider)
         {
-            _provider = factory.CreateProvider();
+            _provider = provider;
         }
 
         public async Task<bool> SendEmailAsync(string toEmail, string subject, string body)

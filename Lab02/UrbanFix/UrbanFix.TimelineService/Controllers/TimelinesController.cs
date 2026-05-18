@@ -30,7 +30,7 @@ namespace UrbanFix.TimelineService.Controllers
             if (!timeline.Any())
                 return Ok(new List<object>());
 
-            return Ok(timeline.OrderBy(t => t.OccurredAt).Select(t => new
+            return Ok(timeline.Select(t => new
             {
                 t.Id,
                 t.ReportId,

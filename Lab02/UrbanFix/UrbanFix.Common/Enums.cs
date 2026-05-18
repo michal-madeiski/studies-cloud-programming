@@ -14,4 +14,13 @@
         Completed,
         Rejected
     }
+
+    public enum ReportStatus
+    {
+        New,
+        Verified,
+        Rejected,
+        Assigned,
+        Completed
+    }
 }

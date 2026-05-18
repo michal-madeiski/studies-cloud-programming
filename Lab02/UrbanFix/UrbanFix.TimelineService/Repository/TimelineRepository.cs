@@ -17,7 +17,7 @@ namespace UrbanFix.TimelineService.Repository
 
         public async Task<PaginationResponse<Timeline>> GetByReportIdAsync(Guid reportId, int pageNumber = 1, int pageSize = 10)
         {
-            var query = _context.Timelines.Where(t => t.ReportId == reportId);
+            var query = _context.Timelines.Where(t => t.ReportId == reportId).OrderBy(t => t.OccurredAt);
             var totalCount = await query.CountAsync();
 
             var timelines = await query

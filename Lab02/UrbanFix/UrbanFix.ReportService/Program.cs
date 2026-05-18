@@ -4,6 +4,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using UrbanFix.ReportService.Consumers;
 using UrbanFix.ReportService.Repository;
 using UrbanFix.ReportService.Services;
 
@@ -54,6 +55,11 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<ReportCreatedEventConsumer>();
+    x.AddConsumer<ReportVerifiedEventConsumer>();
+    x.AddConsumer<TaskAssignedEventConsumer>();
+    x.AddConsumer<TaskCompletedEventConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitUrl = builder.Configuration.GetConnectionString("MqConn");

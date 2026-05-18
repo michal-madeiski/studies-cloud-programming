@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using UrbanFix.Common;
 using UrbanFix.Common.Pagination;
 using UrbanFix.ReportService.Models;
 
@@ -20,9 +21,27 @@ namespace UrbanFix.ReportService.Repository
             return await _context.Reports.FirstOrDefaultAsync(r => r.Id == reportId);
         }
 
-        public async Task<PaginationResponse<Report>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+        public async Task UpdateAsync(Report report)
         {
-            var query = _context.Reports;
+            _context.Reports.Update(report);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<PaginationResponse<Report>> GetAllAsync(int pageNumber = 1, int pageSize = 10, bool sortDescending = false, DateTime? from = null, DateTime? to = null, ReportStatus? status = null)
+        {
+            IQueryable<Report> query = _context.Reports;
+
+            if (from.HasValue)
+                query = query.Where(r => r.UploadedAt >= from.Value);
+            if (to.HasValue)
+                query = query.Where(r => r.UploadedAt <= to.Value);
+            if (status.HasValue)
+                query = query.Where(r => r.Status == status.Value);
+
+            query = sortDescending
+                ? query.OrderByDescending(r => r.UploadedAt)
+                : query.OrderBy(r => r.UploadedAt);
+
             var totalCount = await query.CountAsync();
 
             var reports = await query

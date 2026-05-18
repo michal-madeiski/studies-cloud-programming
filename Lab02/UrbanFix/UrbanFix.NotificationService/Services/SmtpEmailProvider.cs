@@ -1,4 +1,5 @@
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
 
 namespace UrbanFix.NotificationService.Services
@@ -18,9 +19,15 @@ namespace UrbanFix.NotificationService.Services
         {
             try
             {
-                var smtpHost = _configuration["Email:SmtpHost"] ?? "localhost";
-                var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "1025");
-                var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@urbanfix.pl";
+                var provider = _configuration["Email:Provider"];
+                var fromEmail = _configuration["Email:FromEmail"];
+
+                var smtpHost = _configuration[$"Email:Providers:{provider}:SmtpHost"];
+                var smtpPort = int.Parse(_configuration[$"Email:Providers:{provider}:SmtpPort"]);
+                var smtpUser = _configuration[$"Email:Providers:{provider}:SmtpUser"];
+                var smtpPassword = _configuration[$"Email:Providers:{provider}:SmtpPassword"];
+                var useStartTls = bool.Parse(_configuration[$"Email:Providers:{provider}:UseStartTls"]);
+                var useAuthentication = !string.IsNullOrEmpty(smtpUser) && !string.IsNullOrEmpty(smtpPassword);
 
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("UrbanFix", fromEmail));
@@ -32,12 +39,29 @@ namespace UrbanFix.NotificationService.Services
 
                 using (var client = new SmtpClient())
                 {
-                    await client.ConnectAsync(smtpHost, smtpPort, false);
+                    client.ServerCertificateValidationCallback = (s, c, ch, e) => true;
+                    SecureSocketOptions secureSocketOptions = SecureSocketOptions.None;
+                    if (useStartTls)
+                    {
+                        secureSocketOptions = SecureSocketOptions.StartTls;
+                    }
+                    else if (smtpPort == 465)
+                    {
+                        secureSocketOptions = SecureSocketOptions.SslOnConnect;
+                    }
+
+                    await client.ConnectAsync(smtpHost, smtpPort, secureSocketOptions);
+
+                    if (useAuthentication)
+                    {
+                        await client.AuthenticateAsync(smtpUser, smtpPassword);
+                    }
+
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                 }
 
-                _logger.LogInformation($"[{GetType().Name}] Email sent successfully via SMTP to {toEmail} - Subject: {subject}");
+                _logger.LogInformation($"[{GetType().Name}] Email sent successfully via SMTP ({provider}) to {toEmail} - Subject: {subject}");
                 return true;
             }
             catch (Exception ex)

@@ -47,9 +47,7 @@ builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DbConn")));
 
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<SmtpEmailProvider>();
-builder.Services.AddScoped<AwsSesEmailProvider>();
-builder.Services.AddScoped<IEmailProviderFactory, EmailProviderFactory>();
+builder.Services.AddScoped<IEmailProvider, SmtpEmailProvider>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));

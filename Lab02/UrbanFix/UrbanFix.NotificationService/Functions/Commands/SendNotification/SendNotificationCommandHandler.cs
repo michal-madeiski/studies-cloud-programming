@@ -84,15 +84,15 @@ namespace UrbanFix.NotificationService.Functions.Commands.SendNotification
             {
                 TaskAssignmentStatus.New => $"Otrzymaliśmy twoje zgłoszenie o numerze {request.ReportId}",
 
-                TaskAssignmentStatus.InProgress => $"Twoje zgłoszenie #{request.ReportId}: {request.Description}",
+                TaskAssignmentStatus.InProgress => $"Twoje zgłoszenie {request.ReportId}: {request.Description}",
 
                 TaskAssignmentStatus.Rejected =>
-                    $"Twoje zgłoszenie #{request.ReportId} zostało zweryfikowane i odrzucone.",
+                    $"Twoje zgłoszenie {request.ReportId} zostało zweryfikowane i odrzucone.",
 
                 TaskAssignmentStatus.Completed =>
-                    $"Twoje zgłoszenie #{request.ReportId} zostało ukończone.",
+                    $"Twoje zgłoszenie {request.ReportId} zostało ukończone.",
 
-                _ => $"Status zgłoszenia #{request.ReportId}: {request.Description}"
+                _ => $"Status zgłoszenia {request.ReportId}: {request.Description}"
             };
         }
     }

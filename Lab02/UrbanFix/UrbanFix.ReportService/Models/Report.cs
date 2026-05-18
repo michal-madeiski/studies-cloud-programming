@@ -1,4 +1,6 @@
-﻿namespace UrbanFix.ReportService.Models
+﻿using UrbanFix.Common;
+
+namespace UrbanFix.ReportService.Models
 {
     public class Report
     {
@@ -16,6 +18,8 @@
         public string? S3ObjectKey { get; set; }
         public long FileSize { get; set; }
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+        public ReportStatus Status { get; set; } = ReportStatus.New;
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using UrbanFix.Common;
 using UrbanFix.ReportService.Functions.Commands.CreateReport;
 using UrbanFix.ReportService.Functions.Queries.DownloadReportFile;
 using UrbanFix.ReportService.Functions.Queries.GetAllReports;
@@ -72,7 +73,8 @@ namespace UrbanFix.ReportService.Controllers
                 report.Longitude,
                 report.FileSize,
                 report.UploadedAt,
-                report.S3ObjectKey
+                report.S3ObjectKey,
+                report.Status
             });
         }
 
@@ -92,12 +94,17 @@ namespace UrbanFix.ReportService.Controllers
         }
 
         /// <summary>
-        /// Get all reports with pagination support
+        /// Get all reports sorted by upload date ascending with optional date range filter, status filter and pagination
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAllReports([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [HttpGet("by-date-asc")]
+        public async Task<IActionResult> GetAllReportsByDateAsc(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null,
+            [FromQuery] ReportStatus? status = null)
         {
-            var query = new GetAllReportsQuery(pageNumber, pageSize);
+            var query = new GetAllReportsQuery(pageNumber, pageSize, sortDescending: false, from, to, status);
             var result = await _mediator.Send(query);
 
             return Ok(new
@@ -113,7 +120,47 @@ namespace UrbanFix.ReportService.Controllers
                     r.Longitude,
                     r.FileSize,
                     r.UploadedAt,
-                    r.S3ObjectKey
+                    r.S3ObjectKey,
+                    r.Status
+                }).ToList(),
+                pageNumber = result.PageNumber,
+                pageSize = result.PageSize,
+                totalCount = result.TotalCount,
+                totalPages = result.TotalPages,
+                hasPreviousPage = result.HasPreviousPage,
+                hasNextPage = result.HasNextPage
+            });
+        }
+
+        /// <summary>
+        /// Get all reports sorted by upload date descending with optional date range filter, status filter and pagination
+        /// </summary>
+        [HttpGet("by-date-desc")]
+        public async Task<IActionResult> GetAllReportsByDateDesc(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null,
+            [FromQuery] ReportStatus? status = null)
+        {
+            var query = new GetAllReportsQuery(pageNumber, pageSize, sortDescending: true, from, to, status);
+            var result = await _mediator.Send(query);
+
+            return Ok(new
+            {
+                items = result.Items.Select(r => new
+                {
+                    r.Id,
+                    r.SubmitterEmail,
+                    r.FileName,
+                    r.FileExtension,
+                    r.Description,
+                    r.Latitude,
+                    r.Longitude,
+                    r.FileSize,
+                    r.UploadedAt,
+                    r.S3ObjectKey,
+                    r.Status
                 }).ToList(),
                 pageNumber = result.PageNumber,
                 pageSize = result.PageSize,

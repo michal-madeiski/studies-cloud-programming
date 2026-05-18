@@ -20,7 +20,7 @@ namespace UrbanFix.NotificationService.Controllers
         }
 
         /// <summary>
-        /// Get notifications
+        /// Get report notifications
         /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpGet("{reportId}")]
