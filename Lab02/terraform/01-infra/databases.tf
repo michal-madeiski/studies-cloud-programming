@@ -1,6 +1,3 @@
-# Creates the 5 application databases on the RDS instance.
-# Uses docker run postgres:15 (image already available locally from docker-compose)
-# so no separate psql client installation is required.
 resource "null_resource" "create_databases" {
   depends_on = [aws_db_instance.urbanfix]
 
