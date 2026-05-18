@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using UrbanFix.AssignmentService.Models;
-using UrbanFix.Common;
 using UrbanFix.Common.Pagination;
 
 namespace UrbanFix.AssignmentService.Repository
