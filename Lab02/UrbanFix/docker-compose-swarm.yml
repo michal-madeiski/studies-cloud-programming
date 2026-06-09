@@ -1,0 +1,222 @@
+#name: urbanfix-swarm
+
+services:
+  mailhog:
+    image: mailhog/mailhog
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+
+  api-gateway:
+    image: urbanfix/api-gateway:swarm
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5200:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - ReverseProxy__Clusters__reports-cluster__Destinations__destination1__Address=http://report-service:8080
+      - ReverseProxy__Clusters__verifications-cluster__Destinations__destination1__Address=http://verification-service:8080
+      - ReverseProxy__Clusters__assignments-cluster__Destinations__destination1__Address=http://assignment-service:8080
+      - ReverseProxy__Clusters__timelines-cluster__Destinations__destination1__Address=http://timeline-service:8080
+      - ReverseProxy__Clusters__notifications-cluster__Destinations__destination1__Address=http://notification-service:8080
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+
+  report-service:
+    image: urbanfix/report-service:swarm
+    build:
+      context: .
+      dockerfile: UrbanFix.ReportService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_REPORT}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - AWS__Region=${AWS_REGION}
+      - AWS__AccessKey=${AWS_ACCESS_KEY}
+      - AWS__SecretKey=${AWS_SECRET_KEY}
+      - AWS__SessionToken=${AWS_SESSION_TOKEN}
+      - AWS__BucketName=${AWS_BUCKET_NAME}
+      - AWS__BucketFolder=${AWS_BUCKET_FOLDER}
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 768M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+  verification-service:
+    image: urbanfix/verification-service:swarm
+    build:
+      context: .
+      dockerfile: UrbanFix.VerificationService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_VERIFICATION}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+
+  assignment-service:
+    image: urbanfix/assignment-service:swarm
+    build:
+      context: .
+      dockerfile: UrbanFix.AssignmentService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_ASSIGNMENT}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - Services__ReportService__Url=http://report-service:8080
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+
+  timeline-service:
+    image: urbanfix/timeline-service:swarm
+    build:
+      context: .
+      dockerfile: UrbanFix.TimelineService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_TIMELINE}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 512M
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+
+  notification-service:
+    image: urbanfix/notification-service:swarm
+    build:
+      context: .
+      dockerfile: UrbanFix.NotificationService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DbConn=${DB_CONN_NOTIFICATION}
+      - ConnectionStrings__MqConn=${MQ_CONN}
+      - Cognito__Authority=${COGNITO_AUTHORITY}
+      - Cognito__ClientId=${COGNITO_CLIENT_ID}
+      - Email__Provider=${EMAIL__PROVIDER}
+      - Email__FromEmail=${EMAIL__FROMEMAIL}
+      - Email__Providers__o2__SmtpHost=${EMAIL__PROVIDERS__O2__SMTPHOST}
+      - Email__Providers__o2__SmtpPort=${EMAIL__PROVIDERS__O2__SMTPPORT}
+      - Email__Providers__o2__SmtpUser=${EMAIL__PROVIDERS__O2__SMTPUSER}
+      - Email__Providers__o2__SmtpPassword=${EMAIL__PROVIDERS__O2__SMTPPASSWORD}
+      - Email__Providers__o2__UseStartTls=${EMAIL__PROVIDERS__O2__USESTARTTLS}
+      - Email__Providers__mailhog__SmtpHost=${EMAIL__PROVIDERS__MAILHOG__SMTPHOST}
+      - Email__Providers__mailhog__SmtpPort=${EMAIL__PROVIDERS__MAILHOG__SMTPPORT}
+      - Email__Providers__mailhog__UseStartTls=${EMAIL__PROVIDERS__MAILHOG__USESTARTTLS}
+    networks:
+      - urbanfix-overlay
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+
+networks:
+  urbanfix-overlay:
+    driver: overlay
+    attachable: true
